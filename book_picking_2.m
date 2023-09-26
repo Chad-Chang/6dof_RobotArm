@@ -11,7 +11,7 @@ count = 0;
 % s = 1;
 trajectory_index = 0;
 mode = 1;
-
+%sdafsdf
 joint_angle = [th1,th2,th3,th4,th5,th6];
 
 while t.BytesAvailable == 0 end
