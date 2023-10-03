@@ -1,12 +1,13 @@
 %% totally automated code
-
+clear
+clc
 %% setting 
 robot_validate_now
 test = false;
 q_off = [270.7;178.43;180.11;181.37;179.3;270;197.67;]; %7x1
 %q : 6x1
 robot_op = Robot_operator(robot, Cconfig, tform, q, q_off);
-commu = Communication('127.0.1.1',2013,'/dev/ttyUSB0');
+commu = Communication('127.0.1.1',2016,'/dev/ttyUSB0');
 %% update robot properties
 
 [robot_op.m_T,robot_op.m_T_cam, robot_op.m_q] = robot_op.update_pose(q);
@@ -178,8 +179,10 @@ while(working)
             %stop the process untill signal received
             commu.send_s(s,12,robot_op.m_q); % grip commend in arduino
             pause(1.5);
-            robot_op.m_status = back;
-%             data_uart = commu.receive_s(s); %dicision of grip based on
+            % makesure to return 9/30
+%             robot_op.m_status = back;
+            
+
 %             pressur sensor
     %% back
         case back
@@ -207,9 +210,7 @@ while(working)
             disp("th1 turn")
 %             robot_op.m_status = shelve1_1;
             robot_op.m_status = m_return;
-
-
-% 
+            
 % shelve1_1 = 16; shelve1_1f = 17;  shelve1_2 = 18;
 %     %% shelve1
 %         case shelve1_1

@@ -1,4 +1,3 @@
-% syms th_off1 th_off2 th_off3 th_off4 th_off5 th_off6 alp1 alp2 alp3 alp4 alp5 alp6 d1 d2 d3 d4 d5 d6 a1 a2 a3 a4 a5 a6;
 robot = rigidBodyTree;
 % its the basic model of robot which has no offset angles.
 
@@ -29,7 +28,7 @@ T_total = tform*tform2*tform3*tform4*tform5*tform6*tform7;
 %% current cam
 tform_cam1 = dh(th6+th_off6,d_cam0,0,0);
 tform_cam2 = trvec2tform([0,-0.4547,0]);
-tform_cam3 = trvec2tform([-0.31,0,0]); % -0.33
+tform_cam3 = trvec2tform([-0.33,0,0]); % -0.33
 
 T_cam = tform*tform2*tform3*tform4*tform5*tform6*tform_cam1*tform_cam2*tform_cam3;
 
@@ -129,4 +128,6 @@ q = [th1;th2;th3;th4;th5;th6;];
 % 
 dh_cam = [d(1:5,1),th_off(1:5,1),a(1:5,1),alp(1:5,1)];
 DH = [d,th_off,a,alp];
+
+q_off = [270.7;178.43;180.11;181.37;179.3;270;197.67;]; %7x1
 
