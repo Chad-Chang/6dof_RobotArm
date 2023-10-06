@@ -4,12 +4,24 @@ clc
 %% setting 
 robot_validate_now
 robot_op = Robot_operator(robot, Cconfig, tform, q, q_off);
-commu = Communication('127.0.1.1',2016,'/dev/ttyUSB0');
+port = 2000;
+connected = false;
+while ~connected
+    try
+        port
+        commu = Communication('127.0.1.1',port ,'/dev/ttyUSB2');
+        [t,s] = commu.Open(1,1); % tcp, serial open
+        flush(s);
+        connected = true
+    catch
+        port = port + 1;
+    end
+end
+disp("matlab is running")
 %% update robot properties
 [robot_op.m_T,robot_op.m_T_cam, robot_op.m_q] = robot_op.update_pose(q);
 %% unlock when tcp 
-[t,s] = commu.Open(1,1); % tcp, serial open
-flush(s);
+
 
 %% flag & sequence definition
 robot_status_num
@@ -21,6 +33,7 @@ while(working)
         case wait %3
             if(book_shelve<=2) % maximum 2 books
                 flush(t)
+                flush(s)
                 disp("status = wait");
                 data_uart = commu.receive_s(s)
                 if(data_uart) % recieve_s returns false when packet is bad
@@ -145,29 +158,39 @@ while(working)
         case back % 13
             disp('status = back');
             robot_op = run_back(robot_op,commu,150,1000,s,t,visual);
-            disp('back')
             robot_op.m_status = BS_back;
             
     %% BallScrew back 
         case BS_back % 24
+            disp('status = BS_back');
             pause(0.5);
             commu.send_s(s,BS_back,deg2rad([-90,-90,0,0,0,0]));
-            data_uart = commu.receive_s(s);
-            if(data_uart == "s")
-                robot_op.m_status = orig_P;
-            end
+            %data_uart = commu.receive_s(s);
+            %if(data_uart == "s")
+            pause(5);
+            robot_op.m_status = orig_P;
+            %end
             clear data_uart
             
     %% orig_P
         case orig_P % 14
+            disp('status = orig_P')
             pause(0.5);
-            robot_op = run_orig_P(robot_op,commu,150,s,visual);
+            robot_op = run_return(robot_op,commu,100,s,visual);
+            pause(1);
+            robot_op.m_status = book_th1;
+
+        case book_th1 % 80
+            disp('status = book_th1')
+            pause(0.5)
+            robot_op = run_orig_P(robot_op,commu,80,s,visual);
+            pause(1);
             if(book_shelve == 1) % first shelve is available
                 robot_op.m_status = pick_place1_1;
             elseif(book_shelve == 2) % second shelve is available
-                robot_op.m_status = pick_place2_1;                
+%                 robot_op.m_status = pick_place2_1;                
+                robot_op.m_status = m_return;
             end
-
 %======================arrangement1===========================
 
     %% book shelve
@@ -305,7 +328,7 @@ while(working)
                 disp("book case are not available")
             end
             disp('status = return');
-            robot_op = run_return(robot_op,commu,120,s,visual);
+            robot_op = run_return(robot_op,commu,100,s,visual);
             robot_op.m_status = end_mat;
 
     %% end_mat
@@ -313,8 +336,12 @@ while(working)
             disp('status = end_mat');
             commu.send_t(t,"/2/");
             commu.send_s(s,end_mat,deg2rad([-90,-90,0,0,0,0])); % if arduino got end_mat -> last_signal = 2
-            robot_op.m_status = wait;
-            restart = false;
+            data_uart = commu.receive_s(s)
+            if(data_uart == "s")
+                robot_op.m_status = wait;
+                restart = false;
+            end
+            
 
     %% otherwise
         otherwise
